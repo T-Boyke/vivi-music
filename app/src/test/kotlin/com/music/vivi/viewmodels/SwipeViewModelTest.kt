@@ -67,13 +67,13 @@ class SwipeViewModelTest {
     }
 
     @Test
-    fun `swipe right triggers like`() = runTest {
+    fun `swipe right triggers like and removes item from stack`() = runTest {
         // Given
         val songId = "123"
         val song = SongItem(id = songId, title = "Test Song", artists = emptyList(), thumbnail = "thumb")
         coEvery { YouTube.like(songId) } returns Result.success(Unit)
         
-        viewModel = SwipeViewModel() // Assume empty state or inject state
+        viewModel = SwipeViewModel()
         viewModel.setStackForTest(listOf(song))
 
         // When
@@ -82,10 +82,11 @@ class SwipeViewModelTest {
 
         // Then
         coVerify { YouTube.like(songId) }
+        assertEquals(emptyList<SongItem>(), viewModel.swipeStack.value)
     }
 
     @Test
-    fun `swipe left triggers dislike`() = runTest {
+    fun `swipe left triggers dislike and removes item from stack`() = runTest {
         // Given
         val songId = "456"
         val song = SongItem(id = songId, title = "Test Song", artists = emptyList(), thumbnail = "thumb")
@@ -100,5 +101,52 @@ class SwipeViewModelTest {
 
         // Then
         coVerify { YouTube.dislike(songId) }
+        assertEquals(emptyList<SongItem>(), viewModel.swipeStack.value)
+    }
+
+    @Test
+    fun `removing card triggers loadMore when stack is low`() = runTest {
+        // Given: A stack with few items (less than 5) to trigger loadMore logic.
+        // We need to simulate a valid continuation token first so loadMore actually tries to fetch.
+        val song1 = SongItem(id = "1", title = "S1", artists = emptyList(), thumbnail = "")
+        val song2 = SongItem(id = "2", title = "S2", artists = emptyList(), thumbnail = "")
+        
+        // Mock initial load to set continuation
+        val initialResult = mockk<NextResult>(relaxed = true)
+        coEvery { initialResult.items } returns listOf(song1, song2)
+        coEvery { initialResult.continuation } returns "token"
+        coEvery { YouTube.next(any<WatchEndpoint>(), null) } returns Result.success(initialResult)
+        
+        // Mock loadMore call
+        val moreResult = mockk<NextResult>(relaxed = true)
+        coEvery { moreResult.items } returns listOf(song1) // return something
+        coEvery { YouTube.next(any<WatchEndpoint>(), "token") } returns Result.success(moreResult)
+        
+        viewModel = SwipeViewModel()
+        advanceUntilIdle() // Process initial load
+        
+        // Now stack has 2 items. Removing one should trigger loadMore because 1 < 5.
+        coEvery { YouTube.like("1") } returns Result.success(Unit)
+
+        // When
+        viewModel.swipeRight(song1)
+        advanceUntilIdle()
+
+        // Then
+        coVerify { YouTube.next(any(), "token") }
+    }
+
+    @Test
+    fun `initial load failure sets error message`() = runTest {
+        // Given
+        val errorMsg = "Network Error"
+        coEvery { YouTube.next(any(), any()) } returns Result.failure(Exception(errorMsg))
+
+        // When
+        viewModel = SwipeViewModel()
+        advanceUntilIdle()
+
+        // Then
+        assert(viewModel.errorMessage.value?.contains(errorMsg) == true)
     }
 }

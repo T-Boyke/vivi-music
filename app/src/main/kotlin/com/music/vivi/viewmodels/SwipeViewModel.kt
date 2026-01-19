@@ -33,6 +33,10 @@ class SwipeViewModel : ViewModel() {
     private var continuation: String? = null
     private var isLoading = false
 
+    // Internal mutable state flow for error messages
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
     /**
      * Loads the initial batch of songs for the swipe session.
      * Currently configured to fetch "My Supermix" (or a similar radio) to provide
@@ -40,6 +44,7 @@ class SwipeViewModel : ViewModel() {
      */
     private fun loadInitialData() {
         viewModelScope.launch {
+            _errorMessage.value = null
             val result = YouTube.next(
                 WatchEndpoint(
                     playlistId = "RDTMAK5uy_kset8DisdE7LSD4TNjEVvrKRTmG7a56sY", // 'My Supermix' typical ID
@@ -52,6 +57,7 @@ class SwipeViewModel : ViewModel() {
                 _swipeStack.value = nextResult.items
             }.onFailure {
                 it.printStackTrace()
+                _errorMessage.value = "Failed to load music: ${it.message}"
             }
         }
     }
@@ -109,6 +115,7 @@ class SwipeViewModel : ViewModel() {
                  isLoading = false
              }.onFailure {
                  isLoading = false
+                 _errorMessage.value = "Failed to load more songs: ${it.message}"
              }
          }
     }
