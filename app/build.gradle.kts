@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-android {
+configure<com.android.build.api.dsl.ApplicationExtension> {
     namespace = "com.music.vivi"
     compileSdk = 36
 
@@ -262,7 +262,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.profileinstaller)
-    
+
     implementation("androidx.compose.ui:ui:1.6.1")
     implementation("androidx.graphics:graphics-shapes:1.0.0-alpha05")
     implementation("androidx.glance:glance-appwidget:1.0.0")

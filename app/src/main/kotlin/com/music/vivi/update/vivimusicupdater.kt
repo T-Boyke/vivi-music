@@ -28,13 +28,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -266,7 +266,7 @@ fun UpdateScreen(navController: NavHostController) {
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back_content_desc),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -385,7 +385,7 @@ fun UpdateScreen(navController: NavHostController) {
                         annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
                             .firstOrNull()?.let { annotation ->
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
-                                ContextCompat.startActivity(context, intent, null)
+                                context.startActivity(intent)
                             }
                     },
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -453,7 +453,7 @@ fun UpdateScreen(navController: NavHostController) {
                                                 Intent.ACTION_VIEW,
                                                 Uri.parse(annotation.item)
                                             )
-                                            ContextCompat.startActivity(context, intent, null)
+                                            context.startActivity(intent)
                                         }
                                 },
                                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -657,7 +657,7 @@ fun UpdateScreen(navController: NavHostController) {
 //                                            annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset)
 //                                                .firstOrNull()?.let { annotation ->
 //                                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item))
-//                                                    ContextCompat.startActivity(context, intent, null)
+//                                                    context.startActivity(intent)
 //                                                }
 //                                        },
 //                                        style = MaterialTheme.typography.bodyLarge.copy(
@@ -767,7 +767,7 @@ fun UpdateScreen(navController: NavHostController) {
                                                                 Intent.ACTION_VIEW,
                                                                 Uri.parse(annotation.item)
                                                             )
-                                                            ContextCompat.startActivity(context, intent, null)
+                                                            context.startActivity(intent)
                                                         }
                                                 },
                                                 style = MaterialTheme.typography.bodyLarge.copy(
@@ -784,7 +784,7 @@ fun UpdateScreen(navController: NavHostController) {
 
                                 ////
                                 Spacer(modifier = Modifier.height(15.dp))
-                                Divider(
+                                HorizontalDivider(
                                     modifier = Modifier.padding(vertical = 8.dp),
                                     color = MaterialTheme.colorScheme.outlineVariant,
                                     thickness = 2.dp
@@ -908,7 +908,7 @@ fun UpdateScreen(navController: NavHostController) {
                                                     val intent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                                                         data = Uri.parse("package:${context.packageName}")
                                                     }
-                                                    ContextCompat.startActivity(context, intent, null)
+                                                    context.startActivity(intent)
                                                     return@let
                                                 }
                                             }
@@ -1060,10 +1060,10 @@ suspend fun checkForUpdate(
                     val changelogData = JSONObject(changelogJson)
 
                     // Get description (optional)
-                    description = changelogData.optString("description", null)
+                    description = changelogData.optString("description").takeIf { it.isNotEmpty() }
 
                     // Get image URL (optional)
-                    imageUrl = changelogData.optString("image", null)
+                    imageUrl = changelogData.optString("image").takeIf { it.isNotEmpty() }
 
                     // Get changelog items
                     val changelogArray = changelogData.getJSONArray("changelog")
@@ -1073,7 +1073,7 @@ suspend fun checkForUpdate(
                         }
 
                         // Add warning if it exists (as a separate line)
-                        val warning = changelogData.optString("warning", null)
+                        val warning = changelogData.optString("warning").takeIf { it.isNotEmpty() }
                         if (!warning.isNullOrBlank()) {
                             appendLine("")  // Empty line for spacing
                             appendLine(warning)

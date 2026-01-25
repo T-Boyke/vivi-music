@@ -48,6 +48,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.music.vivi.constants.HighRefreshRateKey
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material3.AlertDialogDefaults
@@ -149,8 +150,9 @@ import com.music.vivi.constants.DynamicThemeKey
 import com.music.vivi.constants.MiniPlayerHeight
 import com.music.vivi.constants.MiniPlayerBottomSpacing
 import com.music.vivi.constants.UseNewMiniPlayerDesignKey
-import com.music.vivi.constants.HighRefreshRateKey
 import com.music.vivi.constants.PowerSaverKey
+import com.music.vivi.constants.PowerSaverAnimationsKey
+import androidx.compose.animation.core.snap
 
 import com.music.vivi.constants.NavigationBarAnimationSpec
 import com.music.vivi.constants.NavigationBarHeight
@@ -396,6 +398,9 @@ class MainActivity : ComponentActivity() {
             val (powerSaver, _) = rememberPreference(PowerSaverKey, false)
             val (powerSaverPureBlack, _) = rememberPreference(com.music.vivi.constants.PowerSaverPureBlackKey, defaultValue = true)
             val (powerSaverHighRefresh, _) = rememberPreference(com.music.vivi.constants.PowerSaverHighRefreshRateKey, defaultValue = true)
+            val (powerSaverAnimations, _) = rememberPreference(PowerSaverAnimationsKey, defaultValue = true)
+
+            val disableAnimations = powerSaver && powerSaverAnimations
 
             val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
             val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
@@ -626,7 +631,7 @@ class MainActivity : ComponentActivity() {
 
                     val navigationBarHeight by animateDpAsState(
                         targetValue = if (shouldShowNavigationBar && !showRail) NavigationBarHeight else 0.dp,
-                        animationSpec = NavigationBarAnimationSpec,
+                        animationSpec = if (disableAnimations) snap() else NavigationBarAnimationSpec,
                         label = "",
                     )
 
